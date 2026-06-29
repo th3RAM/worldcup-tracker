@@ -9,26 +9,36 @@
     --fq-green:#3ec46d; --fq-dark:#16331f; --ink:#10231a;
     --bg:#f5f7f5; --card:#ffffff; --line:#e3e8e3; --muted:#6b7d70;
     --alive:#2e9e54; --out:#c0392b; --won:#d4af37; --warn:#e08e0b;
+    /* FIFA World Cup 26 official mark: black "26" + gold trophy on white */
+    --wc-blk:#111111; --wc-gold:#c8a02e; --wc-gold-dk:#9a7a17; --wc-ink:#111111;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
        background:var(--bg);color:var(--ink);line-height:1.4;font-size:14px}
   .wrap{max-width:1100px;margin:0 auto;padding:16px}
-  header.hero{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-       background:linear-gradient(135deg,var(--fq-dark),#1f4a2e);color:#fff;
-       border-radius:14px;padding:18px 20px;margin-bottom:14px}
-  header.hero h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.5px}
-  .hash{color:var(--fq-green);font-weight:900}
-  .hero .sub{color:#bfe6cc;font-size:12px;margin-top:2px}
+  header.hero{display:flex;align-items:center;gap:18px;flex-wrap:wrap;position:relative;overflow:hidden;
+       background:#fff;color:var(--wc-blk);border:1px solid var(--line);
+       border-bottom:4px solid var(--wc-gold);
+       border-radius:14px;padding:18px 22px;margin-bottom:14px}
+  header.hero h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--wc-blk)}
+  /* official-style "26" mark: heavy black numerals with a gold trophy */
+  .wc-logo{height:72px;width:auto;flex:0 0 auto;display:block}
+  .wc26{display:flex;align-items:center;gap:2px;flex:0 0 auto;line-height:.85}
+  .wc26 .num{font-weight:900;font-size:56px;letter-spacing:-5px;color:var(--wc-blk)}
+  .wc26 .cup{font-size:40px;margin:0 -2px;filter:drop-shadow(0 1px 1px #0002)}
+  .wc-kicker{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--wc-gold-dk)}
+  .hash{font-weight:900;color:var(--wc-gold-dk)}
+  .hero .sub{color:#6b6b6b;font-size:12px;margin-top:3px}
   .statusbar{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .pill{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:#ffffff22;color:#fff;border:1px solid #ffffff33}
-  .pill.live{background:#3ec46d33;border-color:#3ec46d}
-  .pill.manual{background:#e08e0b33;border-color:#e08e0b}
+  .pill{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:#f0f2f4;color:#555;border:1px solid var(--line)}
+  .pill.live{background:#e6f6ec;color:#1f8a48;border-color:#bfe6cc}
+  .pill.manual{background:#fff4e0;color:#a4660a;border-color:#f0d49a}
   button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;font-weight:700;font-size:12px;padding:7px 12px}
-  .btn-primary{background:var(--fq-green);color:#0b2415}
-  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px}
+  .btn-primary{background:var(--wc-blk);color:#fff}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px;padding-bottom:12px;
+        border-bottom:3px solid var(--wc-gold)}
   .tab{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;color:var(--muted)}
-  .tab.active{background:var(--fq-dark);color:#fff;border-color:var(--fq-dark)}
+  .tab.active{background:var(--wc-ink);color:#fff;border-color:var(--wc-ink)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
   h2.section{font-size:15px;margin:4px 0 12px;display:flex;align-items:center;gap:8px}
   .grid{display:grid;gap:10px}
@@ -94,9 +104,13 @@
 <div class="wrap">
 
   <header class="hero">
+    <img class="wc-logo" src="fifa26-logo.png" alt="FIFA World Cup 26 logo"
+         onerror="this.style.display='none';document.getElementById('wc26fallback').style.display='flex';">
+    <span class="wc26" id="wc26fallback" style="display:none"><span class="num">2</span><span class="cup">&#127942;</span><span class="num">6</span></span>
     <div>
-      <h1><span class="hash">#FQ</span> World Cup 2026 Tracker</h1>
-      <div class="sub">Support Team pool &middot; your country wins it all, you take the prize &#127942;</div>
+      <div class="wc-kicker">FIFA World Cup 26&trade;</div>
+      <h1><span class="hash">#FQ</span> Support Team Tracker</h1>
+      <div class="sub">Office pool &middot; your country wins it all, you take the prize</div>
     </div>
     <div class="statusbar">
       <span class="pill" id="sourcePill">loading&hellip;</span>
