@@ -9,8 +9,11 @@
     --fq-green:#3ec46d; --fq-dark:#16331f; --ink:#10231a;
     --bg:#f5f7f5; --card:#ffffff; --line:#e3e8e3; --muted:#6b7d70;
     --alive:#2e9e54; --out:#c0392b; --won:#d4af37; --warn:#e08e0b;
-    /* FIFA World Cup 26 official mark: black "26" + gold trophy on white */
-    --wc-blk:#111111; --wc-gold:#c8a02e; --wc-gold-dk:#9a7a17; --wc-ink:#111111;
+    /* United 2026 bid palette */
+    --wc-blk:#111111; --wc-ink:#2A398D;
+    --wc-blue:#2A398D; --wc-red:#E61D25; --wc-green:#3CAC3B;
+    --wc-gray:#D1D4D1; --wc-charcoal:#474A4A;
+    --wc-grad:linear-gradient(90deg,var(--wc-green) 0 33.33%,var(--wc-blue) 33.33% 66.66%,var(--wc-red) 66.66% 100%);
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -18,7 +21,7 @@
   .wrap{max-width:1100px;margin:0 auto;padding:16px}
   header.hero{display:flex;align-items:center;gap:18px;flex-wrap:wrap;position:relative;overflow:hidden;
        background:#fff;color:var(--wc-blk);border:1px solid var(--line);
-       border-bottom:4px solid var(--wc-gold);
+       border-bottom:4px solid var(--wc-blue);
        border-radius:14px;padding:18px 22px;margin-bottom:14px}
   header.hero h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--wc-blk)}
   /* official-style "26" mark: heavy black numerals with a gold trophy */
@@ -26,17 +29,17 @@
   .wc26{display:flex;align-items:center;gap:2px;flex:0 0 auto;line-height:.85}
   .wc26 .num{font-weight:900;font-size:56px;letter-spacing:-5px;color:var(--wc-blk)}
   .wc26 .cup{font-size:40px;margin:0 -2px;filter:drop-shadow(0 1px 1px #0002)}
-  .wc-kicker{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--wc-gold-dk)}
-  .hash{font-weight:900;color:var(--wc-gold-dk)}
+  .wc-kicker{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--wc-blue)}
+  .hash{font-weight:900;color:var(--wc-red)}
   .hero .sub{color:#6b6b6b;font-size:12px;margin-top:3px}
   .statusbar{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .pill{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:#f0f2f4;color:#555;border:1px solid var(--line)}
   .pill.live{background:#e6f6ec;color:#1f8a48;border-color:#bfe6cc}
   .pill.manual{background:#fff4e0;color:#a4660a;border-color:#f0d49a}
   button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;font-weight:700;font-size:12px;padding:7px 12px}
-  .btn-primary{background:var(--wc-blk);color:#fff}
+  .btn-primary{background:var(--wc-blue);color:#fff}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px;padding-bottom:12px;
-        border-bottom:3px solid var(--wc-gold)}
+        border-bottom:3px solid var(--wc-blue)}
   .tab{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;color:var(--muted)}
   .tab.active{background:var(--wc-ink);color:#fff;border-color:var(--wc-ink)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
@@ -228,6 +231,8 @@ const TRACKED = c => OWNERS.hasOwnProperty(c);
    2. LIVE DATA (ESPN -- free, no key, CORS-enabled)
    ============================================================ */
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world";
+// standings live on the v2 (non-"site") path; the site path now returns []
+const ESPN_STANDINGS = "https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings";
 const KO_ORDER = ["R32","R16","QF","SF","3P","F"];
 const KO_SIZES = {R32:16,R16:8,QF:4,SF:2,"3P":1,F:1};
 const ROUND_LABEL = {R32:"Round of 32",R16:"Round of 16",QF:"Quarter-final",SF:"Semi-final","3P":"3rd place",F:"Final"};
@@ -236,7 +241,7 @@ const SEASON_RANGE = "20260611-20260719";
 const PLACEHOLDER_RE = /(winner|loser|runner|third place|2nd place|group [a-l] |round of|quarterfinal|semifinal)/i;
 
 async function fetchStandings(){
-  const r=await fetch(`${ESPN}/standings`,{cache:"no-store"});
+  const r=await fetch(ESPN_STANDINGS,{cache:"no-store"});
   if(!r.ok) throw new Error("standings "+r.status);
   const d=await r.json();
   const groups=[];
