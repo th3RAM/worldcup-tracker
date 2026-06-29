@@ -217,7 +217,7 @@ const ESPN = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world";
 const KO_ORDER = ["R32","R16","QF","SF","3P","F"];
 const KO_SIZES = {R32:16,R16:8,QF:4,SF:2,"3P":1,F:1};
 const ROUND_LABEL = {R32:"Round of 32",R16:"Round of 16",QF:"Quarter-final",SF:"Semi-final","3P":"3rd place",F:"Final"};
-const KNOCKOUT_START = "2026-06-28";
+const GROUP_MATCH_COUNT = 72; // 6 matches x 12 groups before knockout begins
 const SEASON_RANGE = "20260611-20260719";
 const PLACEHOLDER_RE = /(winner|loser|runner|third place|2nd place|group [a-l] |round of|quarterfinal|semifinal)/i;
 
@@ -270,8 +270,11 @@ async function fetchMatches(){
    (FIFA schedule separates rounds by rest days, so this is stable) */
 function buildKO(matches, overrides){
   const ko={}; KO_ORDER.forEach(r=>ko[r]=[]);
-  const koMatches=matches.filter(m=>m.dateKey>=KNOCKOUT_START)
-                         .sort((a,b)=>a.date<b.date?-1:1);
+  // Group stage is always the first 72 matches (6 per group x 12 groups);
+  // the remaining 32 are knockout. Slice by chronological order rather than a
+  // UTC date threshold, which mis-bucketed late-night group games into R32.
+  const koMatches=matches.slice().sort((a,b)=>a.date<b.date?-1:1)
+                         .slice(GROUP_MATCH_COUNT);
   let i=0;
   KO_ORDER.forEach(r=>{
     for(let n=0;n<KO_SIZES[r] && i<koMatches.length;n++,i++){
