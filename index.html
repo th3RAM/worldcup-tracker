@@ -99,7 +99,28 @@
   .q-out{background:var(--glow-out);color:var(--out)}
   .groups{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
   .gtitle{font-weight:800;font-size:13px;margin:0 0 6px}
-  .bracket{display:flex;gap:18px;overflow-x:auto;padding-bottom:8px}
+  /* Apple Sports-style round selector */
+  .brkNav{position:relative;display:flex;gap:2px;background:var(--card2);border:1px solid var(--line);
+          border-radius:999px;padding:4px;margin:0 0 14px;overflow:hidden}
+  .brkNav .brkBtn{position:relative;z-index:1;flex:1;text-align:center;border:none;background:transparent;
+          color:var(--muted);font-weight:800;font-size:12px;letter-spacing:.4px;padding:7px 4px;
+          border-radius:999px;cursor:pointer;transition:color .25s ease}
+  .brkNav .brkBtn.active{color:#062417}
+  .brkPill{position:absolute;top:4px;bottom:4px;left:0;width:0;border-radius:999px;background:var(--mint);
+          transition:transform .3s cubic-bezier(.25,.1,.25,1),width .3s cubic-bezier(.25,.1,.25,1);z-index:0}
+  .bracket{display:flex;align-items:flex-start;gap:10px;overflow-x:auto;padding-bottom:8px;scroll-behavior:smooth}
+  .round{transform-origin:top center;
+         transition:opacity .35s cubic-bezier(.25,.1,.25,1),filter .35s ease}
+  /* zoom-out: non-focused rounds recede but keep all card info */
+  .round.dim{opacity:.15;filter:saturate(.85)}
+  .round.near{opacity:.35}
+  .round.focus{opacity:1}
+  .brkNav.dragging .brkPill{transition:none}
+  .brkNav.dragging~.bracket .round{transition:opacity .15s ease}
+  @keyframes brkFocus{from{transform:translateY(4px)}to{transform:none}}
+  .round.focus .match{animation:brkFocus .3s cubic-bezier(.25,.1,.25,1) both}
+  /* during drag, don't re-run the per-card entrance animation (causes flicker) */
+  .brkNav.dragging~.bracket .round.focus .match{animation:none}
   .round{min-width:190px;flex:0 0 auto}
   .round h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 8px;text-align:center}
   .match{border:1px solid var(--line);border-radius:9px;margin-bottom:10px;background:var(--card2);font-size:12px}
@@ -186,6 +207,7 @@
   <section id="view-bracket" class="hidden">
     <div class="card">
       <h2 class="section">&#127942; Knockout Bracket</h2>
+      <div class="brkNav hidden" id="brkNav"><span class="brkPill" id="brkPill"></span></div>
       <div class="bracket" id="bracket"></div>
       <div class="empty hidden" id="bracketEmpty">Knockout stage hasn't started yet &mdash; check back after the group stage.</div>
     </div>
@@ -527,18 +549,136 @@ function renderGroups(){
 
 function renderBracket(){
   const wrap=document.getElementById("bracket"), empty=document.getElementById("bracketEmpty");
+  const nav=document.getElementById("brkNav"), pill=document.getElementById("brkPill");
   wrap.innerHTML="";
   const any=["R32","R16","QF","SF","F"].some(r=>(STATE.ko[r]||[]).length);
   empty.classList.toggle("hidden",any); wrap.classList.toggle("hidden",!any);
+  nav.classList.toggle("hidden",!any);
   if(!any) return;
+  const present=[];
   ["R32","R16","QF","SF","3P","F"].forEach(r=>{
     const arr=STATE.ko[r]||[]; if(!arr.length) return;
-    const col=document.createElement("div"); col.className="round";
+    const col=document.createElement("div"); col.className="round"; col.dataset.round=r;
     col.innerHTML=`<h3>${ROUND_LABEL[r]}</h3>`;
     arr.forEach(m=>col.appendChild(matchEl(m)));
     wrap.appendChild(col);
+    present.push(r);
   });
+  buildBracketNav(present);
 }
+
+const BRK_SHORT={R32:"R32",R16:"R16",QF:"QF",SF:"SF","3P":"3rd",F:"Final"};
+// The "current" round = earliest present round that still has unplayed matches.
+// Once every match in a round is complete, the default advances to the next round.
+function currentRound(rounds){
+  for(const r of rounds){
+    const arr=STATE.ko[r]||[];
+    const complete=arr.length>=KO_SIZES[r] && arr.every(m=>m.played);
+    if(!complete) return r;
+  }
+  // all present rounds complete -> default to the last one
+  return rounds[rounds.length-1];
+}
+function buildBracketNav(rounds){
+  const nav=document.getElementById("brkNav"), pill=document.getElementById("brkPill");
+  // remove old buttons (keep the pill element)
+  [...nav.querySelectorAll(".brkBtn")].forEach(b=>b.remove());
+  rounds.forEach(r=>{
+    const b=document.createElement("button");
+    b.className="brkBtn"; b.dataset.round=r; b.textContent=BRK_SHORT[r];
+    b.onclick=()=>focusRound(r,true);
+    nav.appendChild(b);
+  });
+  // default focus on the current (earliest in-progress) round
+  _curRound=null;
+  const def=currentRound(rounds);
+  requestAnimationFrame(()=>focusRound(def,false));
+  setupBracketDrag();
+}
+function movePill(btn){
+  const pill=document.getElementById("brkPill");
+  pill.style.width=btn.offsetWidth+"px";
+  pill.style.transform=`translateX(${btn.offsetLeft-4}px)`;
+}
+// apply the zoom/scroll for a round WITHOUT snapping the pill (used during drag)
+let _curRound=null;
+function applyZoom(r,scroll){
+  const wrap=document.getElementById("bracket"), nav=document.getElementById("brkNav");
+  const btn=nav.querySelector(`.brkBtn[data-round="${r}"]`); if(!btn) return;
+  // no-op if we're already focused on this round (prevents flicker on repeated calls)
+  if(r===_curRound) return;
+  const prev=_curRound; _curRound=r;
+  nav.querySelectorAll(".brkBtn").forEach(b=>b.classList.toggle("active",b===btn));
+  const cols=[...wrap.querySelectorAll(".round")];
+  const idx=cols.findIndex(c=>c.dataset.round===r);
+  cols.forEach((c,i)=>{
+    const d=Math.abs(i-idx);
+    c.classList.remove("focus","near","dim");
+    if(d===0) c.classList.add("focus");
+    else if(d===1) c.classList.add("near");
+    else c.classList.add("dim");
+  });
+  const col=cols[idx];
+  if(col && scroll){
+    const target=col.offsetLeft-(wrap.clientWidth-col.offsetWidth)/2;
+    const behavior=nav.classList.contains("dragging")?"auto":"smooth";
+    wrap.scrollTo({left:Math.max(0,target),behavior});
+  }
+}
+function focusRound(r,scroll){
+  const nav=document.getElementById("brkNav");
+  const btn=nav.querySelector(`.brkBtn[data-round="${r}"]`); if(!btn) return;
+  applyZoom(r,scroll);
+  movePill(btn);
+}
+// click-and-drag the pill to scrub/zoom across rounds (Apple Sports style)
+function setupBracketDrag(){
+  const nav=document.getElementById("brkNav"), pill=document.getElementById("brkPill");
+  if(nav.dataset.drag) return; nav.dataset.drag="1";
+  const btns=()=>[...nav.querySelectorAll(".brkBtn")];
+  let dragging=false;
+  function nearestBtn(clientX){
+    const list=btns(); if(!list.length) return null;
+    const rel=clientX-nav.getBoundingClientRect().left;
+    let best=list[0],bd=1e9;
+    list.forEach(b=>{const c=b.offsetLeft+b.offsetWidth/2,d=Math.abs(c-rel);if(d<bd){bd=d;best=b;}});
+    return best;
+  }
+  function followPill(clientX){
+    const list=btns(); if(!list.length) return;
+    const w=list[0].offsetWidth;
+    const rel=clientX-nav.getBoundingClientRect().left-w/2;
+    const clamped=Math.max(list[0].offsetLeft,Math.min(list[list.length-1].offsetLeft,rel));
+    pill.style.width=w+"px";
+    pill.style.transform=`translateX(${clamped-4}px)`;
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const x=e.clientX!=null?e.clientX:(e.touches&&e.touches[0].clientX);
+    if(x==null) return;
+    followPill(x);
+    const b=nearestBtn(x); if(b) applyZoom(b.dataset.round,true);
+    e.preventDefault();
+  }
+  function end(){
+    if(!dragging) return; dragging=false; nav.classList.remove("dragging");
+    const a=nav.querySelector(".brkBtn.active")||btns()[0];
+    if(a) focusRound(a.dataset.round,true);
+    window.removeEventListener("pointermove",onMove);
+    window.removeEventListener("pointerup",end);
+  }
+  function start(e){
+    dragging=true; nav.classList.add("dragging");
+    window.addEventListener("pointermove",onMove);
+    window.addEventListener("pointerup",end);
+    onMove(e);
+  }
+  nav.addEventListener("pointerdown",start);
+}
+// keep the pill aligned if the window resizes
+window.addEventListener("resize",()=>{
+  const a=document.querySelector("#brkNav .brkBtn.active"); if(a) movePill(a);
+});
 function matchInfo(m){
   let when="";
   if(m.date){
@@ -620,6 +760,11 @@ document.querySelectorAll(".tab[data-view]").forEach(t=>{
     t.classList.add("active");
     ["leaderboard","groups","bracket","paths"].forEach(v=>
       document.getElementById("view-"+v).classList.toggle("hidden",v!==t.dataset.view));
+    // bracket was hidden (zero-size) on load, so re-align the pill/focus now it's visible
+    if(t.dataset.view==="bracket"){
+      const active=document.querySelector("#brkNav .brkBtn.active")||document.querySelector("#brkNav .brkBtn");
+      if(active){ _curRound=null; requestAnimationFrame(()=>focusRound(active.dataset.round,false)); }
+    }
   };
 });
 document.getElementById("refreshBtn").onclick=()=>refresh();
