@@ -122,7 +122,8 @@
      Fixed width caps the column so the long info footer wraps instead of
      stretching the column to its single-line max-content width. */
   @media (max-width:480px){
-    .round{width:min(88vw,340px);min-width:0;flex:0 0 auto}
+    .bracket{scroll-snap-type:x proximity;scroll-padding-left:2px}
+    .round{width:min(86vw,340px);min-width:0;flex:0 0 auto;scroll-snap-align:start}
     .match{font-size:13px}
     .match .side{padding:7px 10px}
     .match .m-info{font-size:11px;padding:6px 10px;white-space:normal}
@@ -607,13 +608,23 @@ function setupBracketScroll(){
   if(wrap.dataset.scroll) return; wrap.dataset.scroll="1";
   let raf=0;
   wrap.addEventListener("scroll",()=>{
+    // ignore scroll events caused by our own programmatic scroll or by dragging the pill
+    if(nav.classList.contains("dragging")) return;
+    if(_autoScroll){ clearTimeout(_autoScrollTimer); _autoScrollTimer=setTimeout(()=>{_autoScroll=false;},120); return; }
     if(raf) return;
     raf=requestAnimationFrame(()=>{
       raf=0;
       const cols=[...wrap.querySelectorAll(".round")]; if(!cols.length) return;
-      const center=wrap.scrollLeft+wrap.clientWidth/2;
+      const mobile=window.matchMedia("(max-width:480px)").matches;
+      // phones track the left-aligned column; larger screens track the centered one
+      const ref=mobile?wrap.scrollLeft:wrap.scrollLeft+wrap.clientWidth/2;
+      const pos=c=>mobile?c.offsetLeft:c.offsetLeft+c.offsetWidth/2;
       let best=cols[0],bd=1e9;
-      cols.forEach(c=>{const cc=c.offsetLeft+c.offsetWidth/2,d=Math.abs(cc-center);if(d<bd){bd=d;best=c;}});
+      cols.forEach(c=>{const d=Math.abs(pos(c)-ref);if(d<bd){bd=d;best=c;}});
+      // hysteresis: don't switch away from the current round unless the new one is
+      // clearly closer (avoids the pill flickering between two columns at a boundary)
+      const cur=cols.find(c=>c.dataset.round===_curRound);
+      if(cur && cur!==best && Math.abs(pos(cur)-ref)-bd < 40) best=cur;
       // update zoom + pill WITHOUT re-scrolling (the user is already scrolling)
       focusRound(best.dataset.round,false);
     });
@@ -626,6 +637,9 @@ function movePill(btn){
 }
 // apply the zoom/scroll for a round WITHOUT snapping the pill (used during drag)
 let _curRound=null;
+// true while WE are driving the scroll (click/drag-snap); pauses the scroll-sync
+// handler so the pill doesn't chase intermediate columns during a smooth scroll
+let _autoScroll=false, _autoScrollTimer=0;
 function applyZoom(r,scroll){
   const wrap=document.getElementById("bracket"), nav=document.getElementById("brkNav");
   const btn=nav.querySelector(`.brkBtn[data-round="${r}"]`); if(!btn) return;
@@ -644,8 +658,13 @@ function applyZoom(r,scroll){
   });
   const col=cols[idx];
   if(col && scroll){
-    const target=col.offsetLeft-(wrap.clientWidth-col.offsetWidth)/2;
+    // phones: left-align the column so its content is never clipped; larger screens: center it
+    const mobile=window.matchMedia("(max-width:480px)").matches;
+    const target=mobile?col.offsetLeft-2:col.offsetLeft-(wrap.clientWidth-col.offsetWidth)/2;
     const behavior=nav.classList.contains("dragging")?"auto":"smooth";
+    // mark this as a programmatic scroll so the scroll-sync handler stands down
+    _autoScroll=true; clearTimeout(_autoScrollTimer);
+    _autoScrollTimer=setTimeout(()=>{_autoScroll=false;},600);
     wrap.scrollTo({left:Math.max(0,target),behavior});
   }
 }
