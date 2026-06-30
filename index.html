@@ -117,11 +117,14 @@
   .round.focus{opacity:1}
   .brkNav.dragging .brkPill{transition:none}
   .brkNav.dragging~.bracket .round{transition:opacity .15s ease}
-  @keyframes brkFocus{from{transform:translateY(4px)}to{transform:none}}
-  .round.focus .match{animation:brkFocus .3s cubic-bezier(.25,.1,.25,1) both}
-  /* during drag, don't re-run the per-card entrance animation (causes flicker) */
-  .brkNav.dragging~.bracket .round.focus .match{animation:none}
   .round{min-width:190px;flex:0 0 auto}
+  /* narrow the bracket columns on phone-sized screens only */
+  @media (max-width:480px){
+    .round{min-width:150px}
+    .match{font-size:11.5px}
+    .match .side{padding:5px 7px}
+    .match .m-info{font-size:10px;padding:4px 7px}
+  }
   .round h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 8px;text-align:center}
   .match{border:1px solid var(--line);border-radius:9px;margin-bottom:10px;background:var(--card2);font-size:12px}
   .match .side{display:flex;justify-content:space-between;padding:6px 9px;gap:6px}
