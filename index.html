@@ -531,7 +531,7 @@ function renderBracket(){
   const any=["R32","R16","QF","SF","F"].some(r=>(STATE.ko[r]||[]).length);
   empty.classList.toggle("hidden",any); wrap.classList.toggle("hidden",!any);
   if(!any) return;
-  ["R32","R16","QF","SF","F","3P"].forEach(r=>{
+  ["R32","R16","QF","SF","3P","F"].forEach(r=>{
     const arr=STATE.ko[r]||[]; if(!arr.length) return;
     const col=document.createElement("div"); col.className="round";
     col.innerHTML=`<h3>${ROUND_LABEL[r]}</h3>`;
