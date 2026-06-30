@@ -122,7 +122,7 @@
      Fixed width caps the column so the long info footer wraps instead of
      stretching the column to its single-line max-content width. */
   @media (max-width:480px){
-    .round{width:min(80vw,300px);min-width:0;flex:0 0 auto}
+    .round{width:min(88vw,340px);min-width:0;flex:0 0 auto}
     .match{font-size:13px}
     .match .side{padding:7px 10px}
     .match .m-info{font-size:11px;padding:6px 10px;white-space:normal}
@@ -599,6 +599,25 @@ function buildBracketNav(rounds){
   const def=currentRound(rounds);
   requestAnimationFrame(()=>focusRound(def,false));
   setupBracketDrag();
+  setupBracketScroll();
+}
+// keep the slider/focus in sync when the user scrolls the bracket directly
+function setupBracketScroll(){
+  const wrap=document.getElementById("bracket"), nav=document.getElementById("brkNav");
+  if(wrap.dataset.scroll) return; wrap.dataset.scroll="1";
+  let raf=0;
+  wrap.addEventListener("scroll",()=>{
+    if(raf) return;
+    raf=requestAnimationFrame(()=>{
+      raf=0;
+      const cols=[...wrap.querySelectorAll(".round")]; if(!cols.length) return;
+      const center=wrap.scrollLeft+wrap.clientWidth/2;
+      let best=cols[0],bd=1e9;
+      cols.forEach(c=>{const cc=c.offsetLeft+c.offsetWidth/2,d=Math.abs(cc-center);if(d<bd){bd=d;best=c;}});
+      // update zoom + pill WITHOUT re-scrolling (the user is already scrolling)
+      focusRound(best.dataset.round,false);
+    });
+  },{passive:true});
 }
 function movePill(btn){
   const pill=document.getElementById("brkPill");
