@@ -925,9 +925,12 @@ function setupBracketScroll(){
       raf=0;
       const cols=[...wrap.querySelectorAll(".round")]; if(!cols.length) return;
       // track the left-aligned column on all viewports (centering overshot and
-      // clipped card text on wider cards); matches applyZoom's left-align target
-      const ref=wrap.scrollLeft+BRK_LEAD;
-      const pos=c=>c.offsetLeft;
+      // clipped card text on wider cards); matches applyZoom's left-align target.
+      // Measure column offset from the wrap's left edge via rects so it's correct
+      // regardless of the offsetParent.
+      const wrapLeft=wrap.getBoundingClientRect().left;
+      const pos=c=>c.getBoundingClientRect().left-wrapLeft;
+      const ref=BRK_LEAD;
       let best=cols[0],bd=1e9;
       cols.forEach(c=>{const d=Math.abs(pos(c)-ref);if(d<bd){bd=d;best=c;}});
       // hysteresis: don't switch away from the current round unless the new one is
@@ -954,12 +957,14 @@ const BRK_LEAD=6;
 function applyZoom(r,scroll){
   const wrap=document.getElementById("bracket"), nav=document.getElementById("brkNav");
   const btn=nav.querySelector(`.brkBtn[data-round="${r}"]`); if(!btn) return;
-  // no-op if we're already focused on this round (prevents flicker on repeated calls)
-  if(r===_curRound) return;
-  const prev=_curRound; _curRound=r;
-  nav.querySelectorAll(".brkBtn").forEach(b=>b.classList.toggle("active",b===btn));
+  const same=(r===_curRound);
+  _curRound=r;
   const cols=[...wrap.querySelectorAll(".round")];
   const idx=cols.findIndex(c=>c.dataset.round===r);
+  // skip the pill/opacity churn if we're already on this round (prevents flicker on
+  // repeated calls), but still fall through to re-align the scroll if requested
+  if(!same){
+  nav.querySelectorAll(".brkBtn").forEach(b=>b.classList.toggle("active",b===btn));
   cols.forEach((c,i)=>{
     const d=Math.abs(i-idx);
     c.classList.remove("focus","near","dim");
@@ -967,11 +972,13 @@ function applyZoom(r,scroll){
     else if(d===1) c.classList.add("near");
     else c.classList.add("dim");
   });
+  }
   const col=cols[idx];
   if(col && scroll){
     // left-align the focused column with a small lead gap so its content is never
-    // clipped on the left (centering overshot and cut off card text when sliding)
-    const target=col.offsetLeft-BRK_LEAD;
+    // clipped on the left. Measure via bounding rects (offsetLeft is relative to
+    // the offsetParent, not the scroll container, which mis-targeted the scroll).
+    const target=wrap.scrollLeft+(col.getBoundingClientRect().left-wrap.getBoundingClientRect().left)-BRK_LEAD;
     const behavior=nav.classList.contains("dragging")?"auto":"smooth";
     // mark this as a programmatic scroll so the scroll-sync handler stands down
     _autoScroll=true; clearTimeout(_autoScrollTimer);
@@ -1127,7 +1134,7 @@ document.querySelectorAll(".tab[data-view]").forEach(t=>{
     // bracket was hidden (zero-size) on load, so re-align the pill/focus now it's visible
     if(t.dataset.view==="bracket"){
       const active=document.querySelector("#brkNav .brkBtn.active")||document.querySelector("#brkNav .brkBtn");
-      if(active){ _curRound=null; requestAnimationFrame(()=>focusRound(active.dataset.round,false)); }
+      if(active){ _curRound=null; requestAnimationFrame(()=>focusRound(active.dataset.round,true)); }
     }
   };
 });
