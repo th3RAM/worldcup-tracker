@@ -19,6 +19,7 @@
     --wc-purple:#7b4fe0; --wc-blue:#3a5bff; --wc-green:#3cd070;
     --wc-red:#ff4d2e; --wc-pink:#ff3d9a; --wc-lime:#c6f000;
     --wc-neon:#e6ff00;
+    --odds:#3a5bff; /* header-frame blue, reused for bracket odds numbers */
     /* four hard color blocks, one per side (top/right/bottom/left) */
     --wc-frame:conic-gradient(from 45deg at 50% 50%,
       var(--wc-red) 0 25%, var(--wc-neon) 25% 50%,
@@ -34,6 +35,7 @@
     --alive:#0bbf6e; --out:#fb3c1c; --won:#9a7b16; --warn:#a4660a;
     --glow-warn:#fff4e0; --glow-out:#ffe6e1; --glow-won:#fbf2d3;
     --bd-warn:#f0d49a; --bd-out:#ffc1b5; --bd-won:#e7d28a;
+    --odds:#2f4de0; /* deepened for contrast on white */
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -69,19 +71,32 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
   h2.section{font-size:15px;margin:4px 0 12px;display:flex;align-items:center;gap:8px}
   .grid{display:grid;gap:10px}
-  .leader{grid-template-columns:repeat(auto-fill,minmax(235px,1fr))}
-  .owner{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--card2);position:relative;overflow:hidden}
-  .owner .flag{font-size:22px;line-height:1}
-  .owner .meta{min-width:0}
-  .owner .country{font-weight:800;font-size:13px}
-  .owner .who{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .owner .badge{margin-left:auto;font-size:10px;font-weight:800;padding:3px 7px;border-radius:6px;white-space:nowrap}
+  .leader{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));align-items:start;gap:14px}
+  .owner{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--card2);position:relative;overflow:hidden;height:82px;box-sizing:border-box}
+  .owner .flag{font-size:25px;line-height:1;flex:0 0 auto}
+  .owner .meta{flex:1 1 auto;min-width:0}
+  .owner .country{font-weight:800;font-size:14.5px}
+  .owner .who{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .owner .subline{display:flex;align-items:center;gap:8px;min-width:0;margin-top:2px}
+  .owner .who{flex:0 1 auto}
+  .owner .st-text{font-size:9.5px;font-weight:800;letter-spacing:.5px;white-space:nowrap;flex:0 0 auto}
+  .owner .st-text.alive{color:var(--alive)}
+  .owner .st-text.out{color:var(--out)}
+  .owner .st-text.won{color:var(--won)}
+  .owner .odds-wrap{margin-left:auto;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .owner .odds-pill{display:inline-flex;align-items:center;gap:3px;
+    font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
+    padding:5px 11px;border-radius:999px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink)}
+  .owner .odds-pill.fav{background:var(--mint);color:#062417;border-color:var(--mint);
+    box-shadow:0 0 0 3px var(--mint-glow)}
+  .owner .odds-pill .crown{font-size:11px;line-height:1}
   .b-alive{background:var(--mint-glow);color:var(--mint)}
   .b-out{background:var(--glow-out);color:var(--out)}
   .b-won{background:var(--glow-won);color:var(--won)}
   .owner.dim{opacity:.55}
   .owner .stripe{position:absolute;left:0;top:0;bottom:0;width:4px}
-  .owner .detail{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .owner .detail{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
   th,td{padding:6px 6px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
   th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
@@ -108,7 +123,7 @@
   .brkNav .brkBtn.active{color:#062417}
   .brkPill{position:absolute;top:4px;bottom:4px;left:0;width:0;border-radius:999px;background:var(--mint);
           transition:transform .3s cubic-bezier(.25,.1,.25,1),width .3s cubic-bezier(.25,.1,.25,1);z-index:0}
-  .bracket{display:flex;align-items:flex-start;gap:10px;overflow-x:auto;padding-bottom:8px;scroll-behavior:smooth}
+  .bracket{display:flex;align-items:flex-start;gap:14px;overflow-x:auto;padding-bottom:8px;scroll-behavior:smooth}
   .round{transform-origin:top center;
          transition:opacity .35s cubic-bezier(.25,.1,.25,1),filter .35s ease}
   /* zoom-out: non-focused rounds recede but keep all card info */
@@ -117,27 +132,38 @@
   .round.focus{opacity:1}
   .brkNav.dragging .brkPill{transition:none}
   .brkNav.dragging~.bracket .round{transition:opacity .15s ease}
-  .round{min-width:190px;flex:0 0 auto}
+  .round{min-width:212px;flex:0 0 auto}
   /* narrow the bracket columns on phone-sized screens only.
      Fixed width caps the column so the long info footer wraps instead of
      stretching the column to its single-line max-content width. */
   @media (max-width:480px){
     .bracket{scroll-snap-type:x proximity;scroll-padding-left:2px}
     .round{width:min(86vw,340px);min-width:0;flex:0 0 auto;scroll-snap-align:start}
-    .match{font-size:13px}
-    .match .side{padding:7px 10px}
-    .match .m-info{font-size:11px;padding:6px 10px;white-space:normal}
+    .match{font-size:14.5px}
+    .match .side{padding:10px 13px}
+    .match .m-odds{padding:8px 13px;font-size:13px}
+    .match .m-info{font-size:12px;padding:9px 13px;white-space:normal}
   }
-  .round h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 8px;text-align:center}
-  .match{border:1px solid var(--line);border-radius:9px;margin-bottom:10px;background:var(--card2);font-size:12px}
-  .match .side{display:flex;justify-content:space-between;padding:6px 9px;gap:6px}
+  .round h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 10px;text-align:center}
+  .match{border:1px solid var(--line);border-radius:11px;margin-bottom:13px;background:var(--card2);font-size:14px}
+  .match .side{display:flex;justify-content:space-between;padding:9px 12px;gap:8px}
   .match .side+.side{border-top:1px solid var(--line)}
   .match .side.win{font-weight:800;background:var(--mint-glow)}
   .match .side.trk .nm{color:var(--mint)}
-  .match .nm{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .match .nm.tbd{color:var(--muted);font-style:italic;font-size:11px}
-  .match .m-info{border-top:1px solid var(--line);padding:5px 9px;font-size:10.5px;
-                 color:var(--muted);background:var(--card);border-radius:0 0 9px 9px;line-height:1.3}
+  .match .nm{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .match .nm.tbd{color:var(--muted);font-style:italic;font-size:13px}
+  .match .rt{font-weight:800;font-size:14px;flex:0 0 auto}
+  .match .ml{font-weight:700;font-size:13px;color:var(--odds);font-variant-numeric:tabular-nums}
+  .match .m-odds{display:flex;justify-content:space-between;align-items:center;gap:8px;
+                 border-top:1px dashed var(--line);padding:6px 12px;font-size:12.5px;color:var(--muted)}
+  .match .m-odds b{color:var(--odds);font-variant-numeric:tabular-nums}
+  .match .m-odds .book{display:inline-flex;align-items:center}
+  .dk-logo{height:13px;width:auto;vertical-align:middle;opacity:.9}
+  .dk-light{display:none}                 /* default (dark theme): show white-text logo */
+  body.light .dk-dark{display:none}       /* light theme: hide white-text logo */
+  body.light .dk-light{display:inline}    /* light theme: show black-text logo */
+  .match .m-info{border-top:1px solid var(--line);padding:7px 12px;font-size:11.5px;
+                 color:var(--muted);background:var(--card);border-radius:0 0 11px 11px;line-height:1.4}
   .path{border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:9px}
   .path .head{display:flex;align-items:center;gap:9px;margin-bottom:6px;flex-wrap:wrap}
   .path .head .country{font-weight:800}
@@ -156,9 +182,20 @@
            border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;background:var(--card2);color:var(--ink)}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
   .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:4px}
+  .ldr-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .ldr-sort{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .ldr-sort-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .ldrNav{width:340px;margin:0;flex:0 0 auto}
+  .ldrNav .brkBtn{font-size:11px;padding:7px 3px}
+  @media (max-width:480px){ .ldr-sort{width:100%} .ldrNav{width:auto;flex:1} }
   .hidden{display:none}
   .empty{color:var(--muted);font-size:12.5px;padding:8px 2px}
   footer{font-size:11px;color:var(--muted);text-align:center;margin:10px 0 20px}
+  /* FloQast brand mark near the bottom of each tab — the PNG is black, so it is
+     inverted to white in dark mode and left as-is in light mode. */
+  .fq-brand{display:flex;justify-content:center;align-items:center;margin:22px 0 4px}
+  .fq-logo{height:22px;width:auto;opacity:.5;filter:invert(1)}
+  body.light .fq-logo{filter:none;opacity:.55}
 </style>
 </head>
 <body>
@@ -193,12 +230,24 @@
   <section id="view-leaderboard">
     <div class="card">
       <h2 class="section">&#127937; Our 24 Teams</h2>
-      <div class="legend">
-        <span><b class="qmark q-in" style="padding:1px 6px">IN</b> still alive</span>
-        <span><b class="qmark q-out" style="padding:1px 6px">OUT</b> eliminated</span>
-        <span><b class="qmark q-maybe" style="padding:1px 6px">?</b> on the bubble</span>
+      <div class="ldr-bar">
+        <div class="legend">
+          <span><b class="qmark q-in" style="padding:1px 6px">IN</b> still alive</span>
+          <span><b class="qmark q-out" style="padding:1px 6px">OUT</b> eliminated</span>
+          <span><b class="qmark q-maybe" style="padding:1px 6px">?</b> on the bubble</span>
+        </div>
+        <div class="ldr-sort">
+          <span class="ldr-sort-lbl">View</span>
+          <div class="brkNav ldrNav" id="ldrNav">
+            <span class="brkPill" id="ldrPill"></span>
+            <button class="brkBtn" data-sort="az">A&ndash;Z</button>
+            <button class="brkBtn" data-sort="champion">Champion</button>
+            <button class="brkBtn" data-sort="final">Final</button>
+            <button class="brkBtn" data-sort="semi">Semifinal</button>
+          </div>
+        </div>
       </div>
-      <div class="grid leader" id="leaderGrid" style="margin-top:12px"></div>
+      <div class="grid leader" id="leaderGrid" style="margin-top:14px"></div>
     </div>
   </section>
 
@@ -245,10 +294,34 @@
         <button class="tab" id="clearManual">Clear overrides</button>
         <span class="note" id="editorMsg"></span>
       </div>
+      <p class="note" style="margin:14px 0 8px">
+        <b>Real title odds (Leaderboard).</b> &ldquo;Win it all&rdquo; odds are pulled live from DraftKings via
+        <a href="https://the-odds-api.com" target="_blank" rel="noopener">the-odds-api.com</a> (the same numbers
+        Google shows), converted to American odds and cached (refetched at most once every 6&nbsp;hours).
+        <button class="tab" id="refreshKey" style="margin-left:6px">Refresh odds now</button>
+        <span class="note" id="keyMsg"></span>
+      </p>
+      <p class="note" style="margin:14px 0 8px">
+        <b>Manual title odds.</b> If the live feed is unavailable, the model computes &ldquo;win it all&rdquo; odds
+        automatically from live form + DraftKings match odds. To override either source with your own numbers,
+        paste them below, one per line:<br>
+        <code>COUNTRY | AMERICAN-ODDS</code> &nbsp; e.g. <code>Brazil | +450</code> &nbsp;&middot;&nbsp;
+        <code>France | +500</code> &nbsp;&middot;&nbsp; <code>Canada | +6000</code>
+      </p>
+      <textarea id="futuresBox" spellcheck="false" placeholder="Brazil | +450"></textarea>
+      <div class="row">
+        <button class="btn-primary" id="applyFutures">Apply title odds</button>
+        <button class="tab" id="clearFutures">Clear title odds</button>
+        <span class="note" id="futuresMsg"></span>
+      </div>
     </details>
   </div>
 
   <footer>Built for the FloQast Support pool &middot; live data: ESPN (free, no key) &middot; manual override available.</footer>
+
+  <div class="fq-brand" aria-hidden="true">
+    <img class="fq-logo" src="https://raw.githubusercontent.com/th3RAM/worldcup-tracker/main/Primary%20Logo_Black.png" alt="FloQast" onerror="this.style.display='none'">
+  </div>
 </div>
 
 <script>
@@ -302,6 +375,28 @@ const GROUP_MATCH_COUNT = 72; // 6 matches x 12 groups before knockout begins
 const SEASON_RANGE = "20260611-20260719";
 const PLACEHOLDER_RE = /(winner|loser|runner|third place|2nd place|group [a-l] |round of|quarterfinal|semifinal)/i;
 
+// normalize an American moneyline value (string "-340"/"+900"/"EVEN" or number) to an int
+function americanML(v){
+  if(v==null) return null;
+  let s=String(v).trim().toUpperCase();
+  if(s===""||s==="OFF") return null;
+  if(s==="EVEN"||s==="EV"||s==="PK") return 100;
+  const n=parseInt(s.replace(/[^\d+-]/g,""),10);
+  return isNaN(n)?null:n;
+}
+// format an American moneyline for display (always shows the + sign for positives)
+function fmtML(n){
+  if(n==null) return "";
+  return n>0?("+"+n):(""+n);
+}
+// official DraftKings logo (ESPN-hosted assets); theme picks the right contrast variant
+const DK_LOGO_DARK="https://a.espncdn.com/i/betting/Draftkings_Dark.svg";   // white text, for dark bg
+const DK_LOGO_LIGHT="https://a.espncdn.com/i/betting/Draftkings_Light.svg"; // black text, for light bg
+function dkLogo(){
+  return `<img class="dk-logo dk-dark" src="${DK_LOGO_DARK}" alt="DraftKings" loading="lazy">`
+       + `<img class="dk-logo dk-light" src="${DK_LOGO_LIGHT}" alt="DraftKings" loading="lazy">`;
+}
+
 async function fetchStandings(){
   const r=await fetch(ESPN_STANDINGS,{cache:"no-store"});
   if(!r.ok) throw new Error("standings "+r.status);
@@ -343,9 +438,20 @@ async function fetchMatches(){
     const v=c.venue||{}, ad=v.address||{};
     const venue=v.fullName||"";
     const city=[ad.city,ad.country].filter(Boolean).join(", ");
+    // DraftKings moneyline (American) from ESPN's inline odds, when present
+    const od=(c.odds||[]).find(o=>o&&(o.moneyline||o.drawOdds))||null;
+    let odds=null;
+    if(od){
+      const ml=od.moneyline||{};
+      const pick=o=>o?((o.close&&o.close.odds)||(o.open&&o.open.odds)):null;
+      odds={home:americanML(pick(ml.home)),
+            away:americanML(pick(ml.away)),
+            draw:americanML(od.drawOdds&&od.drawOdds.moneyLine),
+            book:(od.provider&&od.provider.name)||"DraftKings"};
+    }
     return {date:e.date, dateKey:e.date.slice(0,10),
             home:h.team,away:a.team,homeLabel:h.label,awayLabel:a.label,
-            hs:h.score,as:a.score,played,venue,city,
+            hs:h.score,as:a.score,played,venue,city,odds,
             winner: played?(h.winner?h.team:(a.winner?a.team:null)):null};
   });
 }
@@ -496,12 +602,166 @@ function statusOf(groups,ko,team){
 /* ============================================================
    4. STATE + RENDER
    ============================================================ */
-let STATE={groups:[],ko:{},matches:[],source:"",updated:null,overrides:[]};
+let STATE={groups:[],ko:{},matches:[],source:"",updated:null,overrides:[],futures:{},apiFutures:{},apiFuturesAt:null};
+let LEADER_SORT="champion"; // "az" | "champion" | "semi" | "final"
+try{ let s=localStorage.getItem("fqwc_ldrsort"); if(s==="odds") s="champion"; // migrate old value
+  if(["az","champion","semi","final"].includes(s)) LEADER_SORT=s; }catch(e){}
+// parse "Country | +450" lines into a map of canon country -> American moneyline
+function parseFutures(text){
+  const out={};
+  (text||"").split(/\n/).forEach(line=>{
+    const ln=line.trim(); if(!ln||ln.startsWith("#")) return;
+    const p=ln.split("|").map(s=>s.trim());
+    if(p.length<2) return;
+    const ml=americanML(p[1]);
+    if(ml!=null) out[canon(p[0])]=ml;
+  });
+  return out;
+}
+
+/* ---- real sportsbook futures via the-odds-api.com (CORS-enabled) ----
+   Free tier = 500 req/month, so we cache the result in localStorage and only
+   refetch when it's older than this TTL (or when the user clicks "Save key & fetch"). */
+const ODDS_API_TTL=6*60*60*1000; // 6 hours
+const ODDS_API_KEY="f4e4538682c3414850b14706edec0ba6"; // the-odds-api.com (free tier, read-only)
+const ODDS_API_URL="https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup_winner/odds/"
+  +"?regions=us&markets=outrights&oddsFormat=american&bookmakers=draftkings";
+function getOddsKey(){ return ODDS_API_KEY; }
+function loadFuturesCache(){
+  try{
+    const c=JSON.parse(localStorage.getItem("fqwc_oddscache")||"null");
+    if(c&&c.odds){ STATE.apiFutures=c.odds; STATE.apiFuturesAt=c.ts||null; }
+  }catch(e){}
+}
+// fetch the live aggregated DraftKings outright-winner market and map to our countries
+async function fetchTitleFutures(force){
+  const key=getOddsKey(); if(!key) return {ok:false,msg:"No API key set — using the model."};
+  if(!force && STATE.apiFuturesAt && (Date.now()-STATE.apiFuturesAt)<ODDS_API_TTL)
+    return {ok:true,cached:true,count:Object.keys(STATE.apiFutures).length};
+  let res;
+  try{ res=await fetch(ODDS_API_URL+"&apiKey="+encodeURIComponent(key)); }
+  catch(e){ return {ok:false,msg:"Network error fetching odds."}; }
+  if(!res.ok){
+    const m=res.status===401?"Invalid API key.":res.status===429?"Quota exhausted (500/month).":("HTTP "+res.status);
+    return {ok:false,msg:"Odds fetch failed: "+m};
+  }
+  let data; try{ data=await res.json(); }catch(e){ return {ok:false,msg:"Bad odds response."}; }
+  const ev=Array.isArray(data)?data[0]:null;
+  const bk=ev&&ev.bookmakers?(ev.bookmakers.find(b=>b.key==="draftkings")||ev.bookmakers[0]):null;
+  const mkt=bk&&bk.markets?bk.markets.find(m=>m.key==="outrights"):null;
+  if(!mkt||!mkt.outcomes||!mkt.outcomes.length) return {ok:false,msg:"No outright-winner market available yet."};
+  const odds={};
+  mkt.outcomes.forEach(o=>{ const ml=americanML(o.price); if(ml!=null) odds[canon(o.name)]=ml; });
+  STATE.apiFutures=odds; STATE.apiFuturesAt=Date.now();
+  try{ localStorage.setItem("fqwc_oddscache",JSON.stringify({ts:STATE.apiFuturesAt,odds})); }catch(e){}
+  return {ok:true,count:Object.keys(odds).length,book:(bk&&bk.title)||"DraftKings"};
+}
 
 function ownersSorted(){
   return Object.keys(OWNERS).map(c=>({country:c,owner:OWNERS[c],st:statusOf(STATE.groups,STATE.ko,c)}))
     .sort((a,b)=>{ const rk=s=>s.cls==="won"?0:s.cls==="alive"?1:2;
       return rk(a.st)-rk(b.st)||a.country.localeCompare(b.country); });
+}
+
+/* ---- dynamic title odds (model-implied, recomputed every refresh) ----
+   Pure client-side estimate from the live data we already pull. For each alive
+   team we estimate the probability of winning EVERY remaining knockout round:
+     P(title) = P(win next match) * P(win a generic match)^(rounds left - 1)
+   The next match uses the live DraftKings no-vig line when available; later
+   rounds use a generic win prob from group-stage strength vs the field average.
+   Probabilities are normalized across the full alive field (one champion), so
+   teams deeper in the bracket are correctly favored over shallow ones. */
+function teamNextOdds(team){
+  for(const r of KO_ORDER){
+    const m=(STATE.ko[r]||[]).find(x=>(x.home===team||x.away===team)&&!x.played&&x.home&&x.away&&x.odds);
+    if(m) return {odds:m.odds, isHome:m.home===team};
+  }
+  return null;
+}
+// no-vig advance probability for a team in a 3-way (home/draw/away) knockout match
+function impliedAdvance(o,isHome){
+  const dec=ml=> ml==null?null:(ml>0?ml/100+1:100/(-ml)+1);
+  const dh=dec(o.home), da=dec(o.away), dd=dec(o.draw);
+  if(!dh||!da) return null;
+  let ph=1/dh, pa=1/da, pd=dd?1/dd:0;
+  const s=ph+pa+pd; if(s<=0) return null;
+  ph/=s; pa/=s; pd/=s;
+  return (isHome?ph:pa)+0.5*pd; // draw -> extra time/penalties ~ coin flip
+}
+function probToAmerican(p){
+  p=Math.min(Math.max(p,1e-4),0.999);
+  let ml=p>=0.5 ? -(100*p/(1-p)) : (100*(1-p)/p);
+  const a=Math.abs(ml);
+  const step=a<150?5:(a<400?10:(a<1000?25:100));
+  ml=Math.sign(ml)*Math.round(a/step)*step;
+  if(ml>-100 && ml<100) ml=ml>=0?100:-100;
+  return Math.round(ml);
+}
+// how many matches a team must still win to lift the trophy (depth in the bracket)
+const KO_SEQ=["R32","R16","QF","SF","F"];
+function roundsToTitle(team){
+  // earliest round where the team still has an UNplayed match -> that many wins left
+  for(let i=0;i<KO_SEQ.length;i++){
+    const m=teamInRound(STATE.ko,KO_SEQ[i],team);
+    if(m&&!m.played) return KO_SEQ.length-i;
+    if(m&&m.played&&m.winner!==team) return 0; // eliminated
+  }
+  // won their last populated match but the next round isn't drawn yet
+  for(let i=KO_SEQ.length-1;i>=0;i--){
+    const m=teamInRound(STATE.ko,KO_SEQ[i],team);
+    if(m&&m.played&&m.winner===team) return KO_SEQ.length-1-i; // wins left after this round
+  }
+  return KO_SEQ.length; // not in KO yet -> assume full run
+}
+const ACHIEVED=-100000; // sentinel: team has already secured this market (locked in)
+// Compute model-implied odds for three futures markets:
+//   champ = win the tournament (normalized across the field; blended w/ real odds elsewhere)
+//   final = reach the Final    (win every remaining match except the Final)
+//   semi  = reach the Semifinal (win every remaining match except the SF and Final)
+// "final"/"semi" are absolute per-team probabilities (multiple teams can reach a stage),
+// so they are NOT normalized. ACHIEVED means the team is already at/past that stage.
+function computeFutures(){
+  const groups=STATE.groups||[];
+  const rows=[]; groups.forEach(g=>(g.rows||[]).forEach(r=>rows.push(r)));
+  const champ={},semi={},final={};
+  if(!rows.length) return {champ,semi,final};
+  let champion=null; const alive=[];
+  rows.forEach(r=>{
+    const st=statusOf(groups,STATE.ko,r.team);
+    if(st.cls==="won") champion=r.team;
+    if(st.alive) alive.push(r);
+  });
+  if(champion){ champ[champion]=ACHIEVED; semi[champion]=ACHIEVED; final[champion]=ACHIEVED; return {champ,semi,final}; }
+  const clamp=(x,lo,hi)=>Math.min(Math.max(x,lo),hi);
+  // group-stage strength score for every alive team
+  const strength={}; let sStr=0;
+  alive.forEach(r=>{
+    const gp=Math.max(r.p,1);
+    let s=0.4 + r.pts/gp + 0.35*(r.gd/gp);
+    if(s<0.1) s=0.1;
+    strength[r.team]=s; sStr+=s;
+  });
+  const avgStr=sStr/Math.max(alive.length,1);
+  const champW={}; let sum=0;
+  alive.forEach(r=>{
+    // per-match win probs for the remaining bracket: next match uses the live market
+    // line when available, later rounds use a generic strength-vs-field probability
+    const g=clamp(strength[r.team]/(strength[r.team]+avgStr),0.15,0.85);
+    const nx=teamNextOdds(r.team);
+    const adv=nx?impliedAdvance(nx.odds,nx.isHome):null;
+    const nextP=(adv!=null)?clamp(adv,0.05,0.95):g;
+    const rem=Math.max(roundsToTitle(r.team),0); // matches still to win for the title
+    const p=[]; for(let i=0;i<rem;i++) p.push(i===0?nextP:g);
+    const prod=n=>{ let x=1; for(let i=0;i<n;i++) x*=p[i]; return x; };
+    // champion weight (normalized below)
+    champW[r.team]=prod(rem); sum+=champW[r.team];
+    // reach-Final = win all but the last match; reach-SF = win all but the last two
+    const winsFinal=rem-1, winsSemi=rem-2;
+    final[r.team] = winsFinal<=0 ? ACHIEVED : probToAmerican(prod(winsFinal));
+    semi[r.team]  = winsSemi<=0  ? ACHIEVED : probToAmerican(prod(winsSemi));
+  });
+  if(sum>0) alive.forEach(r=>{ champ[r.team]=probToAmerican(champW[r.team]/sum); });
+  return {champ,semi,final};
 }
 
 function render(){
@@ -515,17 +775,66 @@ function render(){
 
 function renderLeader(){
   const grid=document.getElementById("leaderGrid"); grid.innerHTML="";
-  ownersSorted().forEach(r=>{
+  const fut=computeFutures();
+  // which futures market to show: A–Z view still displays the headline Champion odds
+  const market=(LEADER_SORT==="semi"||LEADER_SORT==="final")?LEADER_SORT:"champion";
+  const MKT_NAME={champion:"win the World Cup",final:"reach the Final",semi:"reach the Semifinal"};
+  // resolve each owned country's odds for the selected market.
+  // Champion market priority: manual paste > live API book > model. Reach markets: model only.
+  const list=ownersSorted();
+  list.forEach(r=>{
+    if(market==="champion"){
+      const man=STATE.futures[r.country], api=STATE.apiFutures[r.country];
+      if(man!=null){ r._odds=man; r._src="manual"; }
+      else if(api!=null){ r._odds=api; r._src="api"; }
+      else if(fut.champ[r.country]!=null){ r._odds=fut.champ[r.country]; r._src="model"; }
+      else { r._odds=null; r._src=null; }
+    }else{
+      const v=fut[market][r.country];
+      r._odds = (v!=null)?v:null; r._src=(v!=null)?"model":null;
+    }
+    r._achieved = r._odds===ACHIEVED;
+  });
+  // rank the alive favorites (shortest/most-negative American odds first)
+  const implied=ml=> ml==null?-1 : (ml<0 ? (-ml)/((-ml)+100) : 100/(ml+100));
+  const ranked=list.filter(r=>r.st.alive&&r._odds!=null&&!r._achieved).sort((a,b)=>implied(b._odds)-implied(a._odds));
+  ranked.forEach((r,i)=>r._rank=i+1);
+  // sort the rendered order: A–Z by country, else by the selected market's odds
+  // (already-secured/champion first, then favorites, eliminated/no-odds last).
+  if(LEADER_SORT==="az"){
+    list.sort((a,b)=> a.country.localeCompare(b.country));
+  }else{
+    const rk=r=>r.st.cls==="won"?4:(r._achieved?3:(r.st.alive&&r._odds!=null?2:(r.st.alive?1:0)));
+    list.sort((a,b)=> rk(b)-rk(a) || implied(b._odds)-implied(a._odds) || a.country.localeCompare(b.country));
+  }
+  list.forEach(r=>{
     const div=document.createElement("div");
     div.className="owner"+(r.st.alive?"":" dim");
-    const bcls=r.st.cls==="won"?"b-won":r.st.alive?"b-alive":"b-out";
     const stripe=r.st.cls==="won"?"var(--won)":r.st.alive?"var(--alive)":"var(--out)";
+    const od=r._odds;
+    const src=r._src==="manual"?("Manually entered odds to "+MKT_NAME[market])
+             :r._src==="api"?"Live DraftKings odds to win the World Cup (the-odds-api.com)"
+             :("Model-implied odds to "+MKT_NAME[market]);
+    const stCls=r.st.cls==="won"?"won":r.st.alive?"alive":"out";
+    // single prominent odds pill on the right; #1 favorite gets a crown + mint fill
+    let oddsHtml="";
+    if(r.st.cls==="won"){
+      oddsHtml=`<span class="odds-pill fav" title="Champion"><span class="crown">\u{1F3C6}</span>CHAMP</span>`;
+    }else if(r.st.alive&&r._achieved){
+      // already locked into this stage (e.g. team in the Final for the "reach Final" market)
+      oddsHtml=`<span class="odds-pill fav" title="Already ${MKT_NAME[market]}">&#10003; IN</span>`;
+    }else if(r.st.alive&&od!=null){
+      const fav=r._rank===1;
+      oddsHtml=`<span class="odds-pill${fav?" fav":""}" title="${src}">`
+             + (fav?`<span class="crown">\u{1F451}</span>`:"")
+             + `${fmtML(od)}</span>`;
+    }
     div.innerHTML=`<span class="stripe" style="background:${stripe}"></span>
       <span class="flag">${FLAG[r.country]||""}</span>
       <span class="meta"><div class="country">${r.country}</div>
-      <div class="who">${r.owner}</div>
-      ${r.st.detail?`<div class="detail">${r.st.detail}</div>`:""}</span>
-      <span class="badge ${bcls}">${r.st.label}</span>`;
+      <div class="subline"><span class="who">${r.owner}</span></div>
+      <div class="detail">${r.st.detail||"&nbsp;"}</div></span>
+      <span class="odds-wrap">${oddsHtml}<span class="st-text ${stCls}">${r.st.label}</span></span>`;
     grid.appendChild(div);
   });
 }
@@ -734,8 +1043,16 @@ function matchInfo(m){
 }
 function matchEl(m){
   const el=document.createElement("div"); el.className="match";
-  el.appendChild(sideEl(m.home,m.homeLabel,m.hs,m.played,m.winner===m.home&&!!m.home));
-  el.appendChild(sideEl(m.away,m.awayLabel,m.as,m.played,m.winner===m.away&&!!m.away));
+  // show DraftKings moneyline odds only on upcoming matches with both teams set
+  const o=m.odds;
+  const showOdds=!m.played && o && !!m.home && !!m.away;
+  el.appendChild(sideEl(m.home,m.homeLabel,m.hs,m.played,m.winner===m.home&&!!m.home, showOdds?o.home:null));
+  el.appendChild(sideEl(m.away,m.awayLabel,m.as,m.played,m.winner===m.away&&!!m.away, showOdds?o.away:null));
+  if(showOdds && o.draw!=null){
+    const od=document.createElement("div"); od.className="m-odds";
+    od.innerHTML=`<span>Draw <b>${fmtML(o.draw)}</b></span><span class="book">${dkLogo()}</span>`;
+    el.appendChild(od);
+  }
   const info=matchInfo(m);
   if(info){
     const f=document.createElement("div"); f.className="m-info"; f.textContent=info;
@@ -743,13 +1060,15 @@ function matchEl(m){
   }
   return el;
 }
-function sideEl(team,label,score,played,win){
+function sideEl(team,label,score,played,win,ml){
   const d=document.createElement("div");
   const real=!!team;
   d.className="side"+(win?" win":"")+(real&&TRACKED(team)?" trk":"");
   const name=real?`${FLAG[team]||""} ${team}${TRACKED(team)?` <span class="note">(${OWNERS[team]})</span>`:""}`:label;
+  const right=played&&score!=null?`<b>${score}</b>`
+            :(ml!=null?`<span class="ml">${fmtML(ml)}</span>`:"");
   d.innerHTML=`<span class="nm${real?"":" tbd"}">${name}</span>
-               <span>${played&&score!=null?score:""}</span>`;
+               <span class="rt">${right}</span>`;
   return d;
 }
 
@@ -823,6 +1142,26 @@ document.getElementById("clearManual").onclick=()=>{
   try{localStorage.removeItem("fqwc_ovr");}catch(e){}
   refresh(); document.getElementById("editorMsg").textContent="Overrides cleared.";
 };
+document.getElementById("applyFutures").onclick=()=>{
+  const txt=document.getElementById("futuresBox").value;
+  STATE.futures=parseFutures(txt);
+  try{localStorage.setItem("fqwc_futures",txt);}catch(e){}
+  render();
+  document.getElementById("futuresMsg").textContent="Applied odds for "+Object.keys(STATE.futures).length+" team(s).";
+};
+document.getElementById("clearFutures").onclick=()=>{
+  document.getElementById("futuresBox").value=""; STATE.futures={};
+  try{localStorage.removeItem("fqwc_futures");}catch(e){}
+  render(); document.getElementById("futuresMsg").textContent="Title odds cleared.";
+};
+/* real sportsbook futures (the-odds-api.com) — force a fresh pull */
+document.getElementById("refreshKey").onclick=async()=>{
+  const msg=document.getElementById("keyMsg");
+  msg.textContent=" Fetching live odds…";
+  const r=await fetchTitleFutures(true);
+  if(r.ok){ render(); msg.textContent=" Loaded real "+(r.book||"DraftKings")+" odds for "+r.count+" team(s)."; }
+  else msg.textContent=" "+(r.msg||"Fetch failed.");
+};
 /* light/dark theme toggle */
 function applyTheme(mode){
   const light=mode==="light";
@@ -836,10 +1175,38 @@ document.getElementById("themeBtn").onclick=()=>{
   try{localStorage.setItem("fqwc_theme",next);}catch(e){}
 };
 
+// Leaderboard sort slider (mirrors the bracket round selector)
+function moveLeaderPill(){
+  const nav=document.getElementById("ldrNav"), pill=document.getElementById("ldrPill");
+  const btn=nav.querySelector(".brkBtn.active"); if(!btn) return;
+  pill.style.width=btn.offsetWidth+"px";
+  pill.style.transform=`translateX(${btn.offsetLeft-4}px)`;
+}
+(function setupLeaderSort(){
+  const nav=document.getElementById("ldrNav");
+  nav.querySelectorAll(".brkBtn").forEach(b=>{
+    b.classList.toggle("active",b.dataset.sort===LEADER_SORT);
+    b.onclick=()=>{
+      if(b.dataset.sort===LEADER_SORT) return;
+      LEADER_SORT=b.dataset.sort;
+      try{localStorage.setItem("fqwc_ldrsort",LEADER_SORT);}catch(e){}
+      nav.querySelectorAll(".brkBtn").forEach(x=>x.classList.toggle("active",x===b));
+      moveLeaderPill();
+      renderLeader();
+    };
+  });
+  requestAnimationFrame(moveLeaderPill);
+})();
+window.addEventListener("resize",moveLeaderPill);
+
 (function init(){
   try{ applyTheme(localStorage.getItem("fqwc_theme")||"dark"); }catch(e){ applyTheme("dark"); }
   try{ const s=localStorage.getItem("fqwc_ovr"); if(s){document.getElementById("manualBox").value=s;STATE.overrides=parseOverrides(s);} }catch(e){}
+  try{ const f=localStorage.getItem("fqwc_futures"); if(f){document.getElementById("futuresBox").value=f;STATE.futures=parseFutures(f);} }catch(e){}
+  // real sportsbook futures: restore cached odds, refetch if stale (key is baked in)
+  loadFuturesCache();
   refresh();
+  fetchTitleFutures(false).then(r=>{ if(r&&r.ok&&!r.cached) render(); });
 })();
 </script>
 </body>
