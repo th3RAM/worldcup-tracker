@@ -924,10 +924,10 @@ function setupBracketScroll(){
     raf=requestAnimationFrame(()=>{
       raf=0;
       const cols=[...wrap.querySelectorAll(".round")]; if(!cols.length) return;
-      const mobile=window.matchMedia("(max-width:480px)").matches;
-      // phones track the left-aligned column; larger screens track the centered one
-      const ref=mobile?wrap.scrollLeft:wrap.scrollLeft+wrap.clientWidth/2;
-      const pos=c=>mobile?c.offsetLeft:c.offsetLeft+c.offsetWidth/2;
+      // track the left-aligned column on all viewports (centering overshot and
+      // clipped card text on wider cards); matches applyZoom's left-align target
+      const ref=wrap.scrollLeft+BRK_LEAD;
+      const pos=c=>c.offsetLeft;
       let best=cols[0],bd=1e9;
       cols.forEach(c=>{const d=Math.abs(pos(c)-ref);if(d<bd){bd=d;best=c;}});
       // hysteresis: don't switch away from the current round unless the new one is
@@ -949,6 +949,8 @@ let _curRound=null;
 // true while WE are driving the scroll (click/drag-snap); pauses the scroll-sync
 // handler so the pill doesn't chase intermediate columns during a smooth scroll
 let _autoScroll=false, _autoScrollTimer=0;
+// small left-lead gap so the focused column's content is never clipped on the left
+const BRK_LEAD=6;
 function applyZoom(r,scroll){
   const wrap=document.getElementById("bracket"), nav=document.getElementById("brkNav");
   const btn=nav.querySelector(`.brkBtn[data-round="${r}"]`); if(!btn) return;
@@ -967,9 +969,9 @@ function applyZoom(r,scroll){
   });
   const col=cols[idx];
   if(col && scroll){
-    // phones: left-align the column so its content is never clipped; larger screens: center it
-    const mobile=window.matchMedia("(max-width:480px)").matches;
-    const target=mobile?col.offsetLeft-2:col.offsetLeft-(wrap.clientWidth-col.offsetWidth)/2;
+    // left-align the focused column with a small lead gap so its content is never
+    // clipped on the left (centering overshot and cut off card text when sliding)
+    const target=col.offsetLeft-BRK_LEAD;
     const behavior=nav.classList.contains("dragging")?"auto":"smooth";
     // mark this as a programmatic scroll so the scroll-sync handler stands down
     _autoScroll=true; clearTimeout(_autoScrollTimer);
